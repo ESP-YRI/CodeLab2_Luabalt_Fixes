@@ -156,6 +156,16 @@ function love.update(dt)
  -- if(player.getY > height) then
   --  text = "Player fell off a building. Hit escape to quit."
   --end
+  if body:getY() > height then
+      resetGame()
+    end
+end
+
+function resetGame()
+  if music:isPlaying() then
+      music:stop()
+    end
+  love.load()
 end
 
 --draws the background, the text on the screen, the player character, the buildings, and the tilesetBatch
@@ -164,7 +174,7 @@ function love.draw()
   love.graphics.setColor(255, 255, 255)
   love.graphics.print(text, 10, 10)
 
-  love.graphics.translate(width/2 - body:getX(), 0)
+  love.graphics.translate(width/20 - body:getX(), 0)
    
   currentAnim:draw(playerImg, body:getX(), body:getY(), body:getAngle())
 
@@ -193,7 +203,7 @@ end
 --instantiates a timer to keep track of how long the player has been in the air
 function love.keypressed( key, isrepeat )
   if key == "up" and onGround then
-    body:applyLinearImpulse(0, -300)
+    body:applyLinearImpulse(0, -500)
     currentAnim = jumpAnim
     currentAnim:gotoFrame(1)
     time = love.timer.getTime( )
@@ -225,7 +235,7 @@ function beginContact(bodyA, bodyB, coll)
   --change the player character's animation to the rolling animation's first frame
   --initialize a timer to keep track of how long the player has been rolling
   --and play the running sound
-  if(aData == "Player" or bData == "Player") then
+  if(aData == "Player" or bData == "Player") and (cx == 0 and (cy == 1 or cy == -1)) then
 
     onGround = true
     currentAnim = rollAnim
