@@ -196,12 +196,13 @@ end
 function updateTilesetBatch()
   tilesetBatch:clear()
 
-  tilesetBatch:add(tileQuads[0], crate.body:getX(), crate.body:getY(), crate.body:getAngle());
-
   building1:draw(tilesetBatch, tileQuads);
   building2:draw(tilesetBatch, tileQuads);
 
   tilesetBatch:flush()
+  
+  -- draw the crate last so it will show on top of the buildings
+  tilesetBatch:add(tileQuads[0], crate.body:getX(), crate.body:getY(), crate.body:getAngle());
 end
 
 --if the player hits the up arrow key, applies force to move the player character upwards on screen
