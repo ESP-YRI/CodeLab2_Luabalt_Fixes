@@ -12,13 +12,14 @@ function love.load()
   width = 600
   height = 300
 
+  -- initiate the physics world, including window size and title
   love.window.setMode(width, height, {resizable=false})
   love.window.setTitle("Luabalt")
 
-  -- One meter is 32px in physics engine
+  -- Set one meter is 15px in physics engine
   love.physics.setMeter(15)
   -- Create a world with standard gravity
-  world = love.physics.newWorld(0, 9.81*15, true)
+  world = love.physics.newWorld(0, 9.81*50, true)
 
   background=love.graphics.newImage('media/iPadMenu_atlas0.png')
   --Make nearest neighbor, so pixels are sharp
@@ -56,14 +57,16 @@ function love.load()
 
   tilesetBatch = love.graphics.newSpriteBatch(tilesetImage, 1500)
 
+  -- Crate
+  crate = {}
   -- Create a Body for the crate.
-  crate_body = love.physics.newBody(world, 770, 200, "dynamic")
-  crate_box = love.physics.newRectangleShape(9, 9, 18, 18)
-  fixture = love.physics.newFixture(crate_body, crate_box)
-  fixture:setUserData("Crate") -- Set a string userdata
+  crate.body = love.physics.newBody(world, 770, 200, "dynamic")
+  crate.box = love.physics.newRectangleShape(9, 9, 18, 18)
+  crate.fixture = love.physics.newFixture(crate.body, crate.box)
+  crate.fixture:setUserData("Crate") -- Set a string userdata
   
   --changed the mass of the crate to 10 so that colliding with it slows down the player
-  crate_body:setMassData(crate_box:computeMass( 7 ))
+  crate.body:setMassData(crate.box:computeMass( 7 ))
 
   text = "hello World"
 
@@ -71,21 +74,24 @@ function love.load()
   building1 = building:makeBuilding(750, 16)
   building2 = building:makeBuilding(1200, 16)
 
-  playerImg = love.graphics.newImage("media/player2.png")
+  -- Player
+  player = {}
+  -- Image
+  player.image = love.graphics.newImage("media/player2.png")
   -- Create a Body for the player.
-  body = love.physics.newBody(world, 400, 100, "dynamic")
+  player.body = love.physics.newBody(world, 450, 100, "dynamic")
   -- Create a shape for the body.
   player_box = love.physics.newRectangleShape(15, 15, 30, 30)
   -- Create fixture between body and shape
-  fixture = love.physics.newFixture(body, player_box)
+  fixture = love.physics.newFixture(player.body, player_box)
   fixture:setUserData("Player") -- Set a string userdata
   
-  -- Calculate the mass of the body based on attatched shapes.
+  -- Calculate the mass of the body based on attached shapes.
   -- This gives realistic simulations.
-  body:setMassData(player_box:computeMass( 1 ))
-  body:setFixedRotation(true)
+  player.body:setMassData(player_box:computeMass( 1 ))
+  player.body:setFixedRotation(true)
   --the player an init push.
-  body:applyLinearImpulse(1000, 0)
+  player.body:applyLinearImpulse(2000, 0)
 
   -- Set the collision callback.
   world:setCallbacks(beginContact,endContact)
@@ -94,7 +100,7 @@ function love.load()
   love.graphics.setBackgroundColor(155,155,155)
 
   -- initializes all of the player character's animations
-  local g = anim8.newGrid(30, 30, playerImg:getWidth(), playerImg:getHeight())
+  local g = anim8.newGrid(30, 30, player.image:getWidth(), player.image:getHeight())
   runAnim = anim8.newAnimation(g('1-14',1), 0.05)
   jumpAnim = anim8.newAnimation(g('15-19',1), 0.1)
   inAirAnim = anim8.newAnimation(g('1-8',2), 0.1)
@@ -117,7 +123,7 @@ function love.load()
   shape = love.physics.newRectangleShape(450, 500, 100, 100)
 end
 
-function love.update(dt)
+function love.update(dt) -- dt: short for delta time
 
   --updates what is loaded on screen and what frame of the animation the player is currently showing
   --every frame
@@ -125,8 +131,8 @@ function love.update(dt)
   world:update(dt)
 
   --updates where the 2 buildings in the game are on screen every frame
-  building1:update(body, dt, building2)
-  building2:update(body, dt, building1)
+  building1:update(player.body, dt, building2)
+  building2:update(player.body, dt, building1)
 
   --runs the function that updates the tilesetBatch and redraws the objects on screen
   updateTilesetBatch()
@@ -147,16 +153,16 @@ function love.update(dt)
   --else, less force is applied to the character (factor of 100)
   if(currentAnim == runAnim) then
     --print("ON GROUND")
-    body:applyLinearImpulse(250 * dt, 0)
+    player.body:applyLinearImpulse(550 * dt, 0)
   else
-    body:applyLinearImpulse(100 * dt, 0)
+    player.body:applyLinearImpulse(250 * dt, 0)
   end
 
   --figure out how to get the player's y position to make this work
- -- if(player.getY > height) then
+  -- if(player.getY > height) then
   --  text = "Player fell off a building. Hit escape to quit."
   --end
-  if body:getY() > height then
+  if player.body:getY() > height then
       resetGame()
     end
 end
@@ -174,9 +180,9 @@ function love.draw()
   love.graphics.setColor(255, 255, 255)
   love.graphics.print(text, 10, 10)
 
-  love.graphics.translate(width/20 - body:getX(), 0)
+  love.graphics.translate(width/20 - player.body:getX(), 0)
    
-  currentAnim:draw(playerImg, body:getX(), body:getY(), body:getAngle())
+  currentAnim:draw(player.image, player.body:getX(), player.body:getY(), player.body:getAngle())
 
   --love.graphics.setColor(255, 0, 0)
   --love.graphics.polygon("line", building1.shape:getPoints())
@@ -190,7 +196,7 @@ end
 function updateTilesetBatch()
   tilesetBatch:clear()
 
-  tilesetBatch:add(tileQuads[0], crate_body:getX(), crate_body:getY(), crate_body:getAngle());
+  tilesetBatch:add(tileQuads[0], crate.body:getX(), crate.body:getY(), crate.body:getAngle());
 
   building1:draw(tilesetBatch, tileQuads);
   building2:draw(tilesetBatch, tileQuads);
@@ -203,7 +209,7 @@ end
 --instantiates a timer to keep track of how long the player has been in the air
 function love.keypressed( key, isrepeat )
   if key == "up" and onGround then
-    body:applyLinearImpulse(0, -500)
+    player.body:applyLinearImpulse(0, -900)
     currentAnim = jumpAnim
     currentAnim:gotoFrame(1)
     time = love.timer.getTime( )
@@ -223,8 +229,8 @@ end
 -- This is called every time a collision begins.
 -- it tracks which two objects have collided and prints that information out in a message to the console
 function beginContact(bodyA, bodyB, coll)
-  local aData=bodyA:getUserData()
-  local bData =bodyB:getUserData()
+  local aData = bodyA:getUserData()
+  local bData = bodyB:getUserData()
 
   cx,cy = coll:getNormal()
   text = text.."\n"..aData.." colliding with "..bData.." with a vector normal of: "..cx..", "..cy
@@ -245,8 +251,10 @@ function beginContact(bodyA, bodyB, coll)
 
   end
 
-  if(aData == "Player" or bData == "Player" and aData == "Crate" or bData == "Crate") then
-    -- figure out how to destroy the crate
+  -- if the player hit the crate, set the collider of the crate to be a sensor
+  if(aData == "Player" and bData == "Crate") or (aData == "Crate" and bData == "Player") then
+    player.body: applyLinearImpulse(-500, 0) -- Push the player back a bit to slow down the player 
+    crate.fixture: setSensor(true) -- Make the crate collider a sensor so it no longer collides physically
   end
 end
 
@@ -255,8 +263,8 @@ end
 -- changes the on screen text to show that the collision has ended 
 function endContact(bodyA, bodyB, coll)
   onGround = false
-  local aData=bodyA:getUserData()
-  local bData=bodyB:getUserData()
+  local aData = bodyA:getUserData()
+  local bData = bodyB:getUserData()
   text = "Collision ended: " .. aData .. " and " .. bData
 
   --stops the running sound of one of the objects that is no longer colliding is the player
