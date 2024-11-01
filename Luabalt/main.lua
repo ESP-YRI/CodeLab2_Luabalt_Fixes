@@ -54,6 +54,15 @@ function love.load()
   tileQuads[5] = love.graphics.newQuad(116, 0, 
     16, 16,
     tilesetImage:getWidth(), tilesetImage:getHeight())
+  tileQuads[6] = love.graphics.newQuad(32, 189, 
+          16, 16,
+          tilesetImage:getWidth(), tilesetImage:getHeight())
+  tileQuads[7] = love.graphics.newQuad(0, 223,
+          16, 16,
+          tilesetImage:getWidth(), tilesetImage:getHeight())
+  tileQuads[8] = love.graphics.newQuad(0, 173,
+          16, 16,
+          tilesetImage:getWidth(), tilesetImage:getHeight())
 
   tilesetBatch = love.graphics.newSpriteBatch(tilesetImage, 1500)
 
